@@ -6,8 +6,9 @@
 <style>
 body{font-family:Arial;padding:15px}
 select,input,button{width:100%;padding:10px;margin:6px 0}
-canvas{border:1px solid #000;width:100%;height:150px;touch-action: none;   /* ⬅️ PENTING */}
-body.noscroll{overflow: hidden;position: fixed;width: 100%;}
+canvas{border:1px solid #000;width:100%;height:160px;touch-action:none; /* WAJIB */}
+body.noscroll{overflow:hidden;position:fixed;width:100%;}
+
 </style>
 </head>
 <body>
@@ -53,43 +54,68 @@ window.addEventListener("load",()=>{
 });
 
 /* ===== TTD ===== */
-const canvas=document.getElementById("sign");
-const ctx=canvas.getContext("2d");
-let draw=false;
+const canvas = document.getElementById("sign");
+const ctx = canvas.getContext("2d");
 
-canvas.addEventListener("touchstart", e => {
-  e.preventDefault();            // ⬅️ KUNCI SCROLL
+let drawing = false;
+
+// FIX ukuran canvas
+function resizeCanvas(){
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  ctx.scale(ratio, ratio);
+}
+resizeCanvas();
+
+function pos(e){
+  const rect = canvas.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : e;
+  return {
+    x: t.clientX - rect.left,
+    y: t.clientY - rect.top
+  };
+}
+
+// ⛔ KUNCI SCROLL
+canvas.addEventListener("touchstart", e=>{
+  e.preventDefault();
   document.body.classList.add("noscroll");
   drawing = true;
-
-  const t = e.touches[0];
-  const r = canvas.getBoundingClientRect();
+  const p = pos(e);
   ctx.beginPath();
-  ctx.moveTo(t.clientX - r.left, t.clientY - r.top);
-},{ passive:false });
+  ctx.moveTo(p.x, p.y);
+},{passive:false});
 
-// GAMBAR
-canvas.addEventListener("touchmove", e => {
-  if (!drawing) return;
-  e.preventDefault();            // ⬅️ KUNCI SCROLL
-
-  const t = e.touches[0];
-  const r = canvas.getBoundingClientRect();
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.strokeStyle = "#000";
-
-  ctx.lineTo(t.clientX - r.left, t.clientY - r.top);
-  ctx.stroke();
-},{ passive:false });
-
-// SELESAI GAMBAR
-canvas.addEventListener("touchend", e => {
+canvas.addEventListener("touchmove", e=>{
   e.preventDefault();
+  if(!drawing) return;
+  const p = pos(e);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+},{passive:false});
+
+canvas.addEventListener("touchend", ()=>{
   drawing = false;
-  ctx.beginPath();
   document.body.classList.remove("noscroll");
-},{ passive:false });
+});
+
+// mouse (PC)
+canvas.addEventListener("mousedown", e=>{
+  drawing = true;
+  const p = pos(e);
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+});
+
+canvas.addEventListener("mousemove", e=>{
+  if(!drawing) return;
+  const p = pos(e);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+});
+
+canvas.addEventListener("mouseup", ()=>drawing=false);
 
 function clearSign(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -134,6 +160,7 @@ function kirim(){
 
 </body>
 </html>
+
 
 
 
