@@ -41,7 +41,7 @@ body.noscroll{overflow: hidden;position: fixed;width: 100%;}
 <canvas id="sign"></canvas>
 <button onclick="clearSign()">Hapus TTD</button>
 
-<button onclick="kirim()">Kirim Absen</button>
+<button type="button" onclick="kirim()">Kirim Absen</button>
 
 <script>
 /* ===== JAM MASUK OTOMATIS ===== */
@@ -97,29 +97,42 @@ function clearSign(){
 
 /* ===== KIRIM ===== */
 function kirim(){
- fetch("https://script.google.com/macros/s/AKfycbwDGrt6IMSBJB7twlh6jOuBSNRGOcCkYdbtz22NDXoEwgchQTDLvWq9GNwY0CkwcsQgeA/exec",{   // ← GANTI
-  method:"POST",
-  headers:{"Content-Type":"application/x-www-form-urlencoded"},
-  body:new URLSearchParams({
-    row:pegawai.value,
-    day:new Date().getDate(),
-    masuk:masuk.value,
-    pulang:pulang.value,
-    sign:canvas.toDataURL("image/jpeg",0.4)
+  fetch("https://script.google.com/macros/s/AKfycbwDGrt6IMSBJB7twlh6jOuBSNRGOcCkYdbtz22NDXoEwgchQTDLvWq9GNwY0CkwcsQgeA/exec",{
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams({
+      row:pegawai.value,
+      day:new Date().getDate(),
+      masuk:masuk.value,
+      pulang:pulang.value,
+      sign:canvas.toDataURL("image/jpeg",0.4)
+    })
   })
- })
- .then(r=>r.text())
- .then(t=>{
-   if(t==="HARI_LIBUR"){
-     alert("Hari ini LIBUR, absen tidak tersedia");
-   }else{
-     alert("Absen berhasil disimpan");
-     clearSign();
-   }
- });
+  .then(r => r.text())
+  .then(t => {
+    console.log("RESP:", t); // debug iOS
+
+    if (t.trim() === "HARI_LIBUR") {
+      alert("Hari ini LIBUR, absen tidak tersedia");
+      return;
+    }
+
+    if (t.trim() === "OK") {
+      alert("Absen berhasil disimpan");
+      clearSign();
+      return;
+    }
+
+    alert("Respon tidak dikenali: " + t);
+  })
+  .catch(err=>{
+    alert("Koneksi gagal");
+    console.error(err);
+  });
 }
 </script>
 
 </body>
 </html>
+
 
