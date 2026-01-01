@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Absen Desa</title>
+<style>
+body{font-family:Arial;padding:15px}
+select,input,button{width:100%;padding:10px;margin:6px 0}
+canvas{border:1px solid #000;width:100%;height:150px}
+</style>
+</head>
+<body>
+
+<h3>ABSEN HARIAN DESA</h3>
+
+<select id="pegawai">
+  <option value="2">Kepala Desa</option>
+  <option value="3">Aghastya W. – Sekretaris Desa</option>
+  <option value="4">Sarjono – Kaur Keuangan</option>
+  <option value="5">Adik Nur Yulianto – Kaur Perencanaan</option>
+  <option value="6">Lukman Ari R. – Kaur TU & Umum</option>
+  <option value="7">Dwi Sudarno – Kasi Pemerintahan</option>
+  <option value="8">Muhsin Basari – Kasi Kesejahteraan</option>
+  <option value="9">Arif Sulthon A. – Kasi Pelayanan</option>
+  <option value="10">Agus Cristanto – Kadus Kuto</option>
+  <option value="11">Kadus Plosorejo</option>
+  <option value="12">Kadus Randubener</option>
+  <option value="13">Mujimin – Kadus Grobogan</option>
+  <option value="14">Manto – Kadus Pengin</option>
+  <option value="15">Aji Wiarto – Kadus Bandungan-Kasihan</option>
+</select>
+
+<label>Jam Masuk (Otomatis)</label>
+<input type="time" id="masuk">
+
+<label>Jam Pulang</label>
+<input type="time" id="pulang">
+
+<h4>Tanda Tangan</h4>
+<canvas id="sign"></canvas>
+<button onclick="clearSign()">Hapus TTD</button>
+
+<button onclick="kirim()">Kirim Absen</button>
+
+<script>
+/* ===== JAM MASUK OTOMATIS ===== */
+function pad(n){return n<10?"0"+n:n;}
+window.addEventListener("load",()=>{
+  const now=new Date();
+  document.getElementById("masuk").value =
+    pad(now.getHours())+":"+pad(now.getMinutes());
+});
+
+/* ===== TTD ===== */
+const canvas=document.getElementById("sign");
+const ctx=canvas.getContext("2d");
+let draw=false;
+
+canvas.addEventListener("touchstart",()=>draw=true);
+canvas.addEventListener("touchend",()=>{draw=false;ctx.beginPath()});
+canvas.addEventListener("touchmove",e=>{
+ if(!draw)return;
+ const t=e.touches[0],r=canvas.getBoundingClientRect();
+ ctx.lineWidth=2;ctx.lineCap="round";
+ ctx.lineTo(t.clientX-r.left,t.clientY-r.top);
+ ctx.stroke();ctx.beginPath();
+ ctx.moveTo(t.clientX-r.left,t.clientY-r.top);
+});
+
+function clearSign(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+/* ===== KIRIM ===== */
+function kirim(){
+ fetch("https://script.google.com/macros/s/AKfycbwDGrt6IMSBJB7twlh6jOuBSNRGOcCkYdbtz22NDXoEwgchQTDLvWq9GNwY0CkwcsQgeA/exec",{   // ← GANTI
+  method:"POST",
+  headers:{"Content-Type":"application/x-www-form-urlencoded"},
+  body:new URLSearchParams({
+    row:pegawai.value,
+    day:new Date().getDate(),
+    masuk:masuk.value,
+    pulang:pulang.value,
+    sign:canvas.toDataURL("image/jpeg",0.4)
+  })
+ })
+ .then(r=>r.text())
+ .then(t=>{
+   if(t==="HARI_LIBUR"){
+     alert("Hari ini LIBUR, absen tidak tersedia");
+   }else{
+     alert("Absen berhasil disimpan");
+     clearSign();
+   }
+ });
+}
+</script>
+
+</body>
+</html>
